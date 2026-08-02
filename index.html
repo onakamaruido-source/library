@@ -20,71 +20,39 @@
 
 <h1>🎼 吹奏楽部 蔵書確認</h1>
 
-
 <a href="admin.html" class="nav-button">
 ⚙ 管理ページ
 </a>
 
-
 </header>
-
-
 
 
 
 <main>
 
 
-<section class="card">
+<div class="card">
 
-
-<input 
-id="search"
-placeholder="曲名・作曲者・編曲者検索"
->
-
+<input id="search"
+placeholder="曲名・作編曲者検索">
 
 <button onclick="searchBook()">
-
 検索
-
 </button>
-
-
-
-</section>
-
-
-
-
-
-<section class="card">
 
 
 <button onclick="printSelectedQR()">
-
-🖨 選択したQRを印刷
-
+🖨 QR印刷
 </button>
 
-
-</section>
-
+</div>
 
 
 
-
-
-<h2>
-楽譜一覧
-</h2>
-
+<h2>楽譜一覧</h2>
 
 
 <div id="list"></div>
-
-
-
 
 
 </main>
@@ -92,32 +60,38 @@ placeholder="曲名・作曲者・編曲者検索"
 
 
 
-
-
-<script src="data.js"></script>
+<script src="config.js"></script>
 
 
 <script>
 
 
-let books =
-
-JSON.parse(
-localStorage.getItem("books")
-)
-
-||
-
-[];
+let books=[];
 
 
 
+async function loadBooks(){
+
+
+let res =
+await fetch(API_URL);
+
+
+
+books =
+await res.json();
+
+
+
+display();
+
+
+}
 
 
 
 
 function display(data=books){
-
 
 
 let area =
@@ -131,31 +105,17 @@ area.innerHTML="";
 data.forEach(book=>{
 
 
-
-area.innerHTML += `
-
-
+area.innerHTML+=`
 
 <div class="card">
 
 
-<label>
-
-<input 
-type="checkbox"
+<input type="checkbox"
 class="qr-select"
-value="${book.id}"
->
-
-QR印刷
-
-</label>
-
-
+value="${book.id}">
 
 
 <h2>
-
 
 <a href="detail.html?id=${book.id}">
 
@@ -163,49 +123,30 @@ ${book.title}
 
 </a>
 
-
 </h2>
 
 
-
-
-
 <p>
-
 出版社：
-${book.publisher || "未登録"}
-
+${book.publisher}
 </p>
 
 
-
-
 <p>
-
 作曲：
-${book.composer || "未登録"}
-
+${book.composer}
 </p>
-
-
 
 
 <p>
-
 編曲：
-${book.arranger || "未登録"}
-
+${book.arranger}
 </p>
-
-
 
 
 </div>
 
-
 `;
-
-
 
 });
 
@@ -216,56 +157,29 @@ ${book.arranger || "未登録"}
 
 
 
-
-
-
 function searchBook(){
 
 
-
 let word =
-
-document
-.getElementById("search")
-.value;
+document.getElementById("search").value;
 
 
+display(
 
+books.filter(b=>
 
-let result =
-
-
-books.filter(book=>
-
-
-
-book.title.includes(word)
-
+b.title.includes(word)
 ||
-
-book.publisher.includes(word)
-
+b.composer.includes(word)
 ||
+b.arranger.includes(word)
 
-book.composer.includes(word)
-
-||
-
-book.arranger.includes(word)
-
-
+)
 
 );
 
 
-
-display(result);
-
-
-
 }
-
-
 
 
 
@@ -276,100 +190,31 @@ display(result);
 function printSelectedQR(){
 
 
-
-let checked =
-
-
+let checks =
 document.querySelectorAll(
 ".qr-select:checked"
 );
 
 
 
-
-let selected=[];
-
-
-
-
-checked.forEach(c=>{
-
-
-let book =
-
-books.find(
-
-b=>b.id==c.value
-
-);
-
-
-
-if(book){
-
-selected.push(book);
-
-}
-
-
-
-});
-
-
-
-
-
-if(selected.length==0){
-
-
-alert("印刷する楽譜を選択してください");
-
-
-return;
-
-
-}
-
-
-
-
-
 let html=`
 
 
-
-<!DOCTYPE html>
-
 <html>
-
 
 <head>
 
-
 <style>
-
-
-body{
-
-margin:20px;
-
-font-family:sans-serif;
-
-}
-
-
 
 .container{
 
 display:grid;
 
-grid-template-columns:
-repeat(5,1fr);
+grid-template-columns:repeat(5,1fr);
 
 gap:15px;
 
 }
-
 
 
 .label{
@@ -381,134 +226,85 @@ font-size:11px;
 }
 
 
-
 .label img{
 
 width:80px;
 
-height:80px;
-
 }
-
 
 
 </style>
 
-
 </head>
-
 
 <body>
 
-
 <div class="container">
-
 
 `;
 
 
 
+checks.forEach(c=>{
 
 
-
-selected.forEach(book=>{
+let b =
+books.find(
+x=>x.id==c.value
+);
 
 
 
 let url =
-
-
 location.href.replace(
 "index.html",
 "detail.html"
 )
-
 +
-
 "?id="
-
 +
-
-book.id;
-
-
+b.id;
 
 
 
 html+=`
 
-
-
 <div class="label">
-
 
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(url)}">
 
-
 <br>
 
-
-${book.title}
-
-
+${b.title}
 
 </div>
 
-
 `;
-
-
 
 });
 
 
-
-
-
-
-
 html+=`
-
 
 </div>
 
-
 </body>
 
-
 </html>
-
 
 `;
 
 
 
-
-
-
-
 let w=
-
 window.open("");
 
-
-
 w.document.write(html);
-
 
 w.document.close();
 
 
-
-
-setTimeout(()=>{
-
-
-w.print();
-
-
-},500);
-
+setTimeout(()=>w.print(),500);
 
 
 }
@@ -516,14 +312,10 @@ w.print();
 
 
 
-
-
-display();
-
+loadBooks();
 
 
 </script>
-
 
 
 </body>
