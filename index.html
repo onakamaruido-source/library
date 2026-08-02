@@ -22,9 +22,7 @@
 
 
 <a href="admin.html" class="nav-button">
-
 ⚙ 管理ページ
-
 </a>
 
 
@@ -33,15 +31,16 @@
 
 
 
+
 <main>
 
 
-<section class="search-box">
+<section class="card">
 
 
 <input 
 id="search"
-placeholder="曲名・作曲者・編曲者で検索"
+placeholder="曲名・作曲者・編曲者検索"
 >
 
 
@@ -52,7 +51,27 @@ placeholder="曲名・作曲者・編曲者で検索"
 </button>
 
 
+
 </section>
+
+
+
+
+
+<section class="card">
+
+
+<button onclick="printSelectedQR()">
+
+🖨 選択したQRを印刷
+
+</button>
+
+
+</section>
+
+
+
 
 
 
@@ -61,7 +80,10 @@ placeholder="曲名・作曲者・編曲者で検索"
 </h2>
 
 
+
 <div id="list"></div>
+
+
 
 
 
@@ -78,19 +100,24 @@ placeholder="曲名・作曲者・編曲者で検索"
 <script>
 
 
-
 let books =
+
 JSON.parse(
 localStorage.getItem("books")
 )
+
 ||
+
 [];
 
 
 
 
 
+
+
 function display(data=books){
+
 
 
 let area =
@@ -104,13 +131,31 @@ area.innerHTML="";
 data.forEach(book=>{
 
 
-area.innerHTML+=`
+
+area.innerHTML += `
+
 
 
 <div class="card">
 
 
+<label>
+
+<input 
+type="checkbox"
+class="qr-select"
+value="${book.id}"
+>
+
+QR印刷
+
+</label>
+
+
+
+
 <h2>
+
 
 <a href="detail.html?id=${book.id}">
 
@@ -118,34 +163,40 @@ ${book.title}
 
 </a>
 
+
 </h2>
+
+
 
 
 
 <p>
 
 出版社：
-${book.publisher}
+${book.publisher || "未登録"}
 
 </p>
+
 
 
 
 <p>
 
 作曲：
-${book.composer}
+${book.composer || "未登録"}
 
 </p>
+
 
 
 
 <p>
 
 編曲：
-${book.arranger}
+${book.arranger || "未登録"}
 
 </p>
+
 
 
 
@@ -166,21 +217,33 @@ ${book.arranger}
 
 
 
+
+
 function searchBook(){
 
 
+
 let word =
+
 document
 .getElementById("search")
 .value;
 
 
 
+
 let result =
+
+
 books.filter(book=>
 
 
+
 book.title.includes(word)
+
+||
+
+book.publisher.includes(word)
 
 ||
 
@@ -191,6 +254,7 @@ book.composer.includes(word)
 book.arranger.includes(word)
 
 
+
 );
 
 
@@ -198,7 +262,257 @@ book.arranger.includes(word)
 display(result);
 
 
+
 }
+
+
+
+
+
+
+
+
+
+function printSelectedQR(){
+
+
+
+let checked =
+
+
+document.querySelectorAll(
+".qr-select:checked"
+);
+
+
+
+
+let selected=[];
+
+
+
+
+checked.forEach(c=>{
+
+
+let book =
+
+books.find(
+
+b=>b.id==c.value
+
+);
+
+
+
+if(book){
+
+selected.push(book);
+
+}
+
+
+
+});
+
+
+
+
+
+if(selected.length==0){
+
+
+alert("印刷する楽譜を選択してください");
+
+
+return;
+
+
+}
+
+
+
+
+
+let html=`
+
+
+
+<!DOCTYPE html>
+
+<html>
+
+
+<head>
+
+
+<style>
+
+
+body{
+
+margin:20px;
+
+font-family:sans-serif;
+
+}
+
+
+
+.container{
+
+display:grid;
+
+grid-template-columns:
+repeat(5,1fr);
+
+gap:15px;
+
+}
+
+
+
+.label{
+
+text-align:center;
+
+font-size:11px;
+
+}
+
+
+
+.label img{
+
+width:80px;
+
+height:80px;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+`;
+
+
+
+
+
+
+selected.forEach(book=>{
+
+
+
+let url =
+
+
+location.href.replace(
+"index.html",
+"detail.html"
+)
+
++
+
+"?id="
+
++
+
+book.id;
+
+
+
+
+
+html+=`
+
+
+
+<div class="label">
+
+
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(url)}">
+
+
+<br>
+
+
+${book.title}
+
+
+
+</div>
+
+
+`;
+
+
+
+});
+
+
+
+
+
+
+
+html+=`
+
+
+</div>
+
+
+</body>
+
+
+</html>
+
+
+`;
+
+
+
+
+
+
+
+let w=
+
+window.open("");
+
+
+
+w.document.write(html);
+
+
+w.document.close();
+
+
+
+
+setTimeout(()=>{
+
+
+w.print();
+
+
+},500);
+
+
+
+}
+
 
 
 
@@ -209,6 +523,7 @@ display();
 
 
 </script>
+
 
 
 </body>
