@@ -149,3 +149,23 @@ display:block;
 width:90%;
 
 }
+
+.nav-button{
+
+display:inline-block;
+
+background:#ffffff33;
+
+color:white;
+
+padding:8px 16px;
+
+border-radius:8px;
+
+text-decoration:none;
+
+margin:5px;
+
+font-weight:bold;
+
+}
