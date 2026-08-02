@@ -4,7 +4,8 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <title>楽譜詳細</title>
 
@@ -22,144 +23,83 @@
 
 
 <a href="index.html" class="nav-button">
-📚 蔵書一覧
+📚 戻る
 </a>
 
 
 <a href="admin.html" class="nav-button">
-⚙ 管理ページ
+⚙ 管理
 </a>
-
 
 </header>
 
 
 
-
 <main>
 
+
 <div id="detail"></div>
+
 
 </main>
 
 
 
-
-
-<script src="data.js"></script>
+<script src="config.js"></script>
 
 
 <script>
 
 
+async function load(){
+
+
 let books =
-
-JSON.parse(
-localStorage.getItem("books")
-)
-
-||
-
-[];
-
-
+await fetch(API_URL)
+.then(r=>r.json());
 
 
 
 let id =
-
 new URLSearchParams(location.search)
 .get("id");
 
 
 
-
-
-let book =
-
+let b =
 books.find(
-b=>b.id==id
+x=>x.id==id
 );
 
 
 
-
-
-let detail =
-document.getElementById("detail");
-
-
-
-
-
-
-
-if(!book){
-
-
-detail.innerHTML=`
-
-<div class="card">
-
-<h2>
-楽譜がありません
-</h2>
-
-<a href="index.html">
-戻る
-</a>
-
-</div>
-
-`;
-
-
-
-}else{
-
-
-
-detail.innerHTML=`
-
-
+document.getElementById("detail")
+.innerHTML=`
 
 <div class="card">
 
 
 <h1>
-${book.title}
+${b.title}
 </h1>
-
-
-
-<hr>
-
 
 
 <p>
 出版社：
-${book.publisher || "未登録"}
+${b.publisher}
 </p>
 
 
 <p>
 作曲者：
-${book.composer || "未登録"}
+${b.composer}
 </p>
 
 
 <p>
 編曲者：
-${book.arranger || "未登録"}
+${b.arranger}
 </p>
-
-
-<p>
-グレード：
-${book.difficulty || "未登録"}
-</p>
-
-
 
 
 <h2>
@@ -167,123 +107,13 @@ ${book.difficulty || "未登録"}
 </h2>
 
 
-
-${
-
-book.missing &&
-book.missing.length
-
-?
-
-`
-
-<ul>
-
-${
-book.missing.map(
-
-x=>
-
-`
-
-<li class="missing">
-
-❌ ${x}
-
-</li>
-
-`
-
-).join("")
-}
-
-</ul>
-
-`
-
-:
-
-`
-
 <p>
-✅ 不足なし
+${b.missing || "なし"}
 </p>
-
-`
-
-}
-
-
-
-
-
-<h2>
-収録パート
-</h2>
-
-
-<ul>
-
-${
-
-book.parts
-
-?
-
-book.parts.map(
-
-x=>
-
-`
-
-<li>
-${x}
-</li>
-
-`
-
-).join("")
-
-:
-
-"<li>未登録</li>"
-
-}
-
-</ul>
-
-
-
-
-
-<br>
-
-
-
-<button onclick="printQR()">
-
-🖨 QR印刷
-
-</button>
-
-
-
-
-<a href="admin.html?id=${book.id}">
-
-<button>
-
-✏ 編集
-
-</button>
-
-</a>
 
 
 
 </div>
-
-
 
 `;
 
@@ -292,153 +122,7 @@ ${x}
 }
 
 
-
-
-
-
-
-
-
-// QR印刷
-
-function printQR(){
-
-
-
-let url =
-location.href;
-
-
-
-let win =
-window.open("");
-
-
-
-win.document.write(`
-
-
-<!DOCTYPE html>
-
-<html>
-
-
-<head>
-
-
-<title>
-
-${book.title}
-
-</title>
-
-
-<style>
-
-body{
-
-text-align:center;
-
-font-family:sans-serif;
-
-}
-
-
-.qr{
-
-width:200px;
-
-}
-
-
-</style>
-
-
-</head>
-
-
-
-<body>
-
-
-
-<h1>
-
-${book.title}
-
-</h1>
-
-
-
-<p>
-
-出版社：
-${book.publisher}
-
-</p>
-
-
-
-<p>
-
-作曲：
-${book.composer}
-
-</p>
-
-
-
-<p>
-
-編曲：
-${book.arranger}
-
-</p>
-
-
-
-<img class="qr"
-
-src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}"
-
->
-
-
-
-<p>
-
-吹奏楽部 蔵書管理
-
-</p>
-
-
-
-</body>
-
-
-</html>
-
-
-
-`);
-
-
-
-win.document.close();
-
-
-
-setTimeout(()=>{
-
-win.print();
-
-},500);
-
-
-
-}
-
-
+load();
 
 
 </script>
