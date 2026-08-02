@@ -1,41 +1,28 @@
 <!DOCTYPE html>
 <html lang="ja">
 
-
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-
-<title>蔵書管理</title>
-
+<title>吹奏楽部 蔵書管理</title>
 
 <link rel="stylesheet" href="style.css">
 
-
 </head>
-
 
 
 <body>
 
 
-
 <header>
 
-
-<h1>
-🎼 蔵書管理
-</h1>
-
+<h1>🎼 蔵書管理</h1>
 
 
 <a href="index.html" class="nav-button">
-
 📚 トップページ
-
 </a>
 
 
@@ -43,17 +30,14 @@
 
 
 
-
-
 <main>
-
 
 
 
 <section class="card">
 
 
-<h2>
+<h2 id="formTitle">
 楽譜追加
 </h2>
 
@@ -63,38 +47,32 @@
 placeholder="曲名">
 
 
-
 <input id="publisher"
 placeholder="出版社">
-
 
 
 <input id="composer"
 placeholder="作曲者">
 
 
-
 <input id="arranger"
 placeholder="編曲者">
-
 
 
 <input id="difficulty"
 placeholder="グレード">
 
 
-
 <input id="missing"
-placeholder="不足譜（例:Tuba,Flute）">
+placeholder="不足譜（例：Tuba,Flute）">
 
 
 
-<button onclick="addBook()">
+<button onclick="saveBook()">
 
 追加
 
 </button>
-
 
 
 </section>
@@ -103,9 +81,8 @@ placeholder="不足譜（例:Tuba,Flute）">
 
 
 
-
 <h2>
-登録済み楽譜
+登録楽譜
 </h2>
 
 
@@ -114,11 +91,7 @@ placeholder="不足譜（例:Tuba,Flute）">
 
 
 
-
-
 </main>
-
-
 
 
 
@@ -130,8 +103,12 @@ placeholder="不足譜（例:Tuba,Flute）">
 <script>
 
 
-
 let books=[];
+
+
+let editId =
+new URLSearchParams(location.search)
+.get("id");
 
 
 
@@ -154,6 +131,14 @@ await res.json();
 display();
 
 
+
+if(editId){
+
+loadEdit();
+
+}
+
+
 }
 
 
@@ -166,6 +151,7 @@ display();
 function display(){
 
 
+
 let area =
 document.getElementById("list");
 
@@ -174,7 +160,7 @@ area.innerHTML="";
 
 
 
-books.forEach(b=>{
+books.forEach(book=>{
 
 
 let url =
@@ -188,32 +174,38 @@ location.href
 +
 "?id="
 +
-b.id;
-
+book.id;
 
 
 
 area.innerHTML+=`
 
 
-
 <div class="card">
-
 
 
 <h3>
 
-${b.title}
+${book.title}
 
 </h3>
 
 
+<p>
+出版社：
+${book.publisher}
+</p>
+
 
 <p>
+作曲：
+${book.composer}
+</p>
 
-出版社：
-${b.publisher}
 
+<p>
+編曲：
+${book.arranger}
 </p>
 
 
@@ -225,27 +217,35 @@ src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComp
 >
 
 
-
 <br>
 
 
 
-<button onclick="deleteBook('${b.id}')">
+<a href="detail.html?id=${book.id}">
+
+<button>
+詳細
+</button>
+
+</a>
+
+
+
+<a href="admin.html?id=${book.id}">
+
+<button>
+編集
+</button>
+
+</a>
+
+
+
+<button onclick="deleteBook('${book.id}')">
 
 削除
 
 </button>
-
-
-<a href="detail.html?id=${b.id}">
-
-<button>
-
-詳細
-
-</button>
-
-</a>
 
 
 
@@ -260,6 +260,7 @@ src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComp
 });
 
 
+
 }
 
 
@@ -270,42 +271,140 @@ src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComp
 
 
 
-async function addBook(){
+function loadEdit(){
+
+
+
+let book =
+
+books.find(
+
+b=>String(b.id)
+===
+String(editId)
+
+);
+
+
+
+if(!book){
+
+return;
+
+}
+
+
+
+document.getElementById("formTitle")
+.innerText="楽譜編集";
+
+
+
+title.value =
+book.title;
+
+
+publisher.value =
+book.publisher;
+
+
+composer.value =
+book.composer;
+
+
+arranger.value =
+book.arranger;
+
+
+difficulty.value =
+book.difficulty;
+
+
+missing.value =
+book.missing;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+async function saveBook(){
 
 
 
 let data={
 
 
-action:"add",
-
 
 title:
-title.value,
+document.getElementById("title").value,
 
 
 publisher:
-publisher.value,
+document.getElementById("publisher").value,
 
 
 composer:
-composer.value,
+document.getElementById("composer").value,
 
 
 arranger:
-arranger.value,
+document.getElementById("arranger").value,
 
 
 difficulty:
-difficulty.value,
+document.getElementById("difficulty").value,
 
 
 missing:
-missing.value
+document.getElementById("missing").value
 
 
 
 };
+
+
+
+
+
+if(data.title==""){
+
+
+alert("曲名を入力してください");
+
+
+return;
+
+
+}
+
+
+
+
+
+
+if(editId){
+
+
+data.action="update";
+
+data.id=editId;
+
+
+}else{
+
+
+data.action="add";
+
+
+}
 
 
 
@@ -321,7 +420,11 @@ API_URL,
 method:"POST",
 
 
+mode:"no-cors",
+
+
 body:
+
 JSON.stringify(data)
 
 
@@ -331,16 +434,25 @@ JSON.stringify(data)
 
 
 
-alert("追加しました");
+alert(
+
+editId ?
+
+"更新しました"
+
+:
+
+"追加しました"
+
+);
 
 
 
-loadBooks();
+location.href="admin.html";
 
 
 
 }
-
 
 
 
@@ -354,11 +466,15 @@ async function deleteBook(id){
 
 
 
-if(!confirm("削除しますか？")){
+if(
+!confirm("削除しますか？")
+){
 
 return;
 
 }
+
+
 
 
 
@@ -372,7 +488,11 @@ API_URL,
 method:"POST",
 
 
+mode:"no-cors",
+
+
 body:
+
 JSON.stringify({
 
 action:"delete",
@@ -391,12 +511,12 @@ id:id
 alert("削除しました");
 
 
-
 loadBooks();
 
 
 
 }
+
 
 
 
@@ -410,6 +530,5 @@ loadBooks();
 
 
 </body>
-
 
 </html>
