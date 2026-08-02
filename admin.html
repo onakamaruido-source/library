@@ -1,30 +1,46 @@
 <!DOCTYPE html>
 <html lang="ja">
 
+
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>吹奏楽部 蔵書管理</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+
+<title>蔵書管理</title>
+
 
 <link rel="stylesheet" href="style.css">
 
+
 </head>
+
 
 
 <body>
 
 
+
 <header>
 
-<h1>🎼 ライブラリアン管理</h1>
+
+<h1>
+🎼 蔵書管理
+</h1>
+
+
 
 <a href="index.html" class="nav-button">
-📚 蔵書一覧へ戻る
+
+📚 トップページ
+
 </a>
 
+
 </header>
+
 
 
 
@@ -33,35 +49,49 @@
 
 
 
+
 <section class="card">
 
 
-<h2 id="formTitle">
+<h2>
 楽譜追加
 </h2>
 
 
 
-<input id="title" placeholder="曲名">
-
-<input id="publisher" placeholder="出版社">
-
-<input id="composer" placeholder="作曲者">
-
-<input id="arranger" placeholder="編曲者">
-
-<input id="difficulty" placeholder="グレード">
-
-
-<textarea id="missing"
-placeholder="不足譜（カンマ区切り）">
-</textarea>
+<input id="title"
+placeholder="曲名">
 
 
 
-<button onclick="saveBook()">
+<input id="publisher"
+placeholder="出版社">
 
-保存
+
+
+<input id="composer"
+placeholder="作曲者">
+
+
+
+<input id="arranger"
+placeholder="編曲者">
+
+
+
+<input id="difficulty"
+placeholder="グレード">
+
+
+
+<input id="missing"
+placeholder="不足譜（例:Tuba,Flute）">
+
+
+
+<button onclick="addBook()">
+
+追加
 
 </button>
 
@@ -73,28 +103,16 @@ placeholder="不足譜（カンマ区切り）">
 
 
 
-<section>
-
 
 <h2>
-登録楽譜
+登録済み楽譜
 </h2>
-
-
-
-<button onclick="printSelected()">
-
-🖨 選択したQRを印刷
-
-</button>
 
 
 
 <div id="list"></div>
 
 
-
-</section>
 
 
 
@@ -106,204 +124,37 @@ placeholder="不足譜（カンマ区切り）">
 
 
 
-<script src="data.js"></script>
+<script src="config.js"></script>
 
 
 <script>
 
 
-let books =
 
-JSON.parse(
-localStorage.getItem("books")
-)
-
-||
-
-[];
-
-
-
-
-let editId =
-
-new URLSearchParams(location.search)
-.get("id");
+let books=[];
 
 
 
 
 
 
-
-// 編集読み込み
-
-if(editId){
+async function loadBooks(){
 
 
-let b =
-books.find(
-x=>x.id==editId
-);
+let res =
+await fetch(API_URL);
 
 
-if(b){
+
+books =
+await res.json();
 
 
-document.getElementById("formTitle")
-.innerText="楽譜編集";
 
-
-title.value=b.title;
-
-publisher.value=b.publisher;
-
-composer.value=b.composer;
-
-arranger.value=b.arranger;
-
-difficulty.value=b.difficulty;
-
-missing.value=b.missing.join(",");
-
+display();
 
 
 }
-
-
-
-}
-
-
-
-
-
-
-
-
-function save(){
-
-
-localStorage.setItem(
-
-"books",
-
-JSON.stringify(books)
-
-);
-
-
-}
-
-
-
-
-
-
-
-
-
-function saveBook(){
-
-
-
-let data={
-
-
-title:title.value,
-
-
-publisher:publisher.value,
-
-
-composer:composer.value,
-
-
-arranger:arranger.value,
-
-
-difficulty:difficulty.value,
-
-
-missing:
-missing.value
-.split(",")
-.map(x=>x.trim())
-.filter(x=>x!=""),
-
-
-
-parts:[
-
-"Score",
-"Flute",
-"Clarinet",
-"Alto Sax",
-"Trumpet",
-"Horn",
-"Trombone",
-"Euphonium",
-"Tuba",
-"Percussion"
-
-]
-
-
-};
-
-
-
-
-
-
-if(editId){
-
-
-let index =
-books.findIndex(
-b=>b.id==editId
-);
-
-
-
-books[index]={
-
-...books[index],
-
-...data
-
-};
-
-
-alert("更新しました");
-
-
-}else{
-
-
-data.id =
-Date.now().toString();
-
-
-
-books.push(data);
-
-
-alert("追加しました");
-
-
-}
-
-
-
-save();
-
-
-location.href="admin.html";
-
-
-}
-
 
 
 
@@ -315,7 +166,6 @@ location.href="admin.html";
 function display(){
 
 
-
 let area =
 document.getElementById("list");
 
@@ -324,25 +174,21 @@ area.innerHTML="";
 
 
 
-
-books.forEach((b,i)=>{
+books.forEach(b=>{
 
 
 let url =
 
-location.href.replace(
+location.href
+.replace(
 "admin.html",
 "detail.html"
 )
 
 +
-
 "?id="
-
 +
-
 b.id;
-
 
 
 
@@ -350,21 +196,8 @@ b.id;
 area.innerHTML+=`
 
 
+
 <div class="card">
-
-
-
-<label>
-
-<input 
-type="checkbox"
-class="qr-select"
-value="${b.id}"
->
-
-QR印刷
-
-</label>
 
 
 
@@ -385,11 +218,7 @@ ${b.publisher}
 
 
 
-
-
 <img
-
-class="qr"
 
 src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(url)}"
 
@@ -397,17 +226,15 @@ src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComp
 
 
 
-<p>
-
-${b.title}
-
-</p>
-
-
-
-
 <br>
 
+
+
+<button onclick="deleteBook('${b.id}')">
+
+削除
+
+</button>
 
 
 <a href="detail.html?id=${b.id}">
@@ -422,38 +249,8 @@ ${b.title}
 
 
 
-<a href="admin.html?id=${b.id}">
-
-<button>
-
-編集
-
-</button>
-
-</a>
-
-
-
-
-<button onclick="printOne(${i})">
-
-個別印刷
-
-</button>
-
-
-
-
-<button onclick="deleteBook(${i})">
-
-削除
-
-</button>
-
-
-
-
 </div>
+
 
 
 `;
@@ -473,26 +270,78 @@ ${b.title}
 
 
 
-
-function deleteBook(i){
-
-
-if(confirm("削除しますか？")){
+async function addBook(){
 
 
-books.splice(i,1);
+
+let data={
 
 
-save();
+action:"add",
 
 
-display();
+title:
+title.value,
+
+
+publisher:
+publisher.value,
+
+
+composer:
+composer.value,
+
+
+arranger:
+arranger.value,
+
+
+difficulty:
+difficulty.value,
+
+
+missing:
+missing.value
+
+
+
+};
+
+
+
+
+
+await fetch(
+
+API_URL,
+
+{
+
+
+method:"POST",
+
+
+body:
+JSON.stringify(data)
+
+
+}
+
+);
+
+
+
+alert("追加しました");
+
+
+
+loadBooks();
+
 
 
 }
 
 
-}
 
 
 
@@ -501,265 +350,49 @@ display();
 
 
 
-
-// 個別印刷
-
-function printOne(i){
-
-
-printBooks(
-[
-books[i]
-]
-
-);
-
-
-}
+async function deleteBook(id){
 
 
 
-
-
-
-
-
-// 複数印刷
-
-function printSelected(){
-
-
-
-let checked =
-
-document.querySelectorAll(
-".qr-select:checked"
-);
-
-
-
-let selected=[];
-
-
-
-checked.forEach(c=>{
-
-
-let b =
-
-books.find(
-x=>x.id==c.value
-);
-
-
-
-selected.push(b);
-
-
-
-});
-
-
-
-
-if(selected.length==0){
-
-
-alert("選択してください");
-
+if(!confirm("削除しますか？")){
 
 return;
 
-
 }
 
 
 
-printBooks(selected);
+await fetch(
+
+API_URL,
+
+{
+
+
+method:"POST",
+
+
+body:
+JSON.stringify({
+
+action:"delete",
+
+id:id
+
+})
 
 
 }
 
+);
 
 
 
+alert("削除しました");
 
 
 
-
-
-function printBooks(list){
-
-
-
-let html=`
-
-
-<!DOCTYPE html>
-
-<html>
-
-
-<head>
-
-
-<style>
-
-
-body{
-
-font-family:sans-serif;
-
-}
-
-
-.container{
-
-
-display:grid;
-
-grid-template-columns:
-repeat(5,1fr);
-
-gap:15px;
-
-
-}
-
-
-
-.label{
-
-
-text-align:center;
-
-font-size:11px;
-
-
-}
-
-
-.label img{
-
-
-width:80px;
-
-height:80px;
-
-
-}
-
-
-
-</style>
-
-
-</head>
-
-
-
-<body>
-
-
-
-<div class="container">
-
-
-`;
-
-
-
-
-
-list.forEach(b=>{
-
-
-let url =
-
-location.href.replace(
-"admin.html",
-"detail.html"
-)
-
-+
-
-"?id="
-
-+
-
-b.id;
-
-
-
-html+=`
-
-
-<div class="label">
-
-
-<img
-
-src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(url)}"
-
->
-
-
-<br>
-
-
-${b.title}
-
-
-
-</div>
-
-
-`;
-
-
-
-});
-
-
-
-
-html+=`
-
-
-</div>
-
-
-</body>
-
-
-</html>
-
-
-`;
-
-
-
-
-
-let w =
-window.open("");
-
-
-
-w.document.write(html);
-
-
-w.document.close();
-
-
-
-setTimeout(()=>{
-
-
-w.print();
-
-
-},500);
+loadBooks();
 
 
 
@@ -769,8 +402,7 @@ w.print();
 
 
 
-
-display();
+loadBooks();
 
 
 
@@ -778,5 +410,6 @@ display();
 
 
 </body>
+
 
 </html>
